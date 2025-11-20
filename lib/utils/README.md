@@ -1,0 +1,1 @@
+Utils: This folder is the home of all “helper” files for external APIs or local libraries. Here I will keep things like firebase helper class, OneSignal helper class or even my own StringHelper class which includes functions to format Strings in our projects.

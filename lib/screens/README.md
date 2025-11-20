@@ -1,0 +1,1 @@
+Screens: This is the folder where all the screens of an app usually goes. As it can be seen on the screenshot, each screen has its own folder. In this specific example the app has a Homescreen which uses a bottom navigation bar and 2 major screens (profiles, technicians, etc.).
