@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flocateapp/screens/register_screen.dart';
+import 'package:flocateapp/screens/forgot_password_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,31 +37,44 @@ class _LoginScreenState extends State<LoginScreen> {
     return true;
   }
 
-  // دالة وهمية لمحاكاة عملية تسجيل الدخول (ستستبدل بFirebase لاحقًا)
-  Future<void> _login() async {
-    if (!_validateInputs()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lütfen tüm alanları doldurun')), // رجاءً املأ كل الحقول
-      );
-      return;
-    }
-
-    setState(() => _loading = true);
-
-    try {
-      // TODO: استبدل هذه المحاكاة بمناداة AuthService.login(email, pass)
-      await Future.delayed(const Duration(seconds: 2));
-
-      // عند نجاح الدخول - مثال: الانتقال إلى الصفحة الرئيسية
-      Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Giriş başarısız: $e')), // فشل الدخول
-      );
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+ Future<void> _login() async {
+  if (!_validateInputs()) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lütfen tüm alanları doldurun')),
+    );
+    return;
   }
+
+  setState(() => _loading = true);
+
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: emailController.text.trim(),
+      password: passwordController.text.trim(),
+    );
+
+    // نجاح تسجيل الدخول
+    Navigator.pushReplacementNamed(context, '/home_screen');
+
+  } on FirebaseAuthException catch (e) {
+    String message = "Bir hata oluştu";
+
+    if (e.code == 'user-not-found') {
+      message = "Bu e-posta ile kullanıcı bulunamadı";
+    } else if (e.code == 'wrong-password') {
+      message = "Hatalı parola";
+    } else if (e.code == 'invalid-email') {
+      message = "Geçersiz e-posta formatı";
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  } finally {
+    if (mounted) setState(() => _loading = false);
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               Center(
                 child: Text (
-                "Hoş Geldiniz Giriş Yapın", 
+                "Hoş Geldiniz", 
                 style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w400),
               )
               ),
@@ -144,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Forgot password
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/forgot');
+                      Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const ForgotPassword()));
                     },
                     child: const Text("Parolamı unuttum?"),
                   ),

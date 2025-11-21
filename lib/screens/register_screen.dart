@@ -1,43 +1,55 @@
 import 'package:flutter/material.dart';
-import 'package:flocateapp/screens/login_screen.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
-  bool _obscure = true; // لتحكم إظهار/إخفاء كلمة المرور
-  bool _loading = false; // حالة تحميل أثناء محاولة تسجيل الدخول
+  bool _obscure = true;
+  bool _loading = false;
 
   @override
   void dispose() {
+    usernameController.dispose();
     emailController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  // مثال دالة تحقق بسيطة قبل محاولة تسجيل الدخول
   bool _validateInputs() {
+    final username = usernameController.text.trim();
     final email = emailController.text.trim();
-    final pass = passwordController.text;
-    if (email.isEmpty || pass.isEmpty) return false;
-    // يمكن إضافة تحقق بريد إلكتروني regex هنا
+    final pass = passwordController.text.trim();
+    final confirm = confirmPasswordController.text.trim();
+
+    if (username.isEmpty || email.isEmpty || pass.isEmpty || confirm.isEmpty) {
+      return false;
+    }
+
+    if (pass != confirm) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Parolalar uyuşmuyor")),
+      );
+      return false;
+    }
+
     return true;
   }
 
-  // دالة وهمية لمحاكاة عملية تسجيل الدخول (ستستبدل بFirebase لاحقًا)
-  Future<void> _login() async {
+  Future<void> _register() async {
     if (!_validateInputs()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Lütfen tüm alanları doldurun'),
-        ), // رجاءً املأ كل الحقول
+        const SnackBar(content: Text('Lütfen tüm alanları doldurun')),
       );
       return;
     }
@@ -45,14 +57,38 @@ class _LoginScreenState extends State<RegisterScreen> {
     setState(() => _loading = true);
 
     try {
-      // TODO: استبدل هذه المحاكاة بمناداة AuthService.login(email, pass)
-      await Future.delayed(const Duration(seconds: 2));
+      // 📌 1) Create user in Firebase Auth
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
 
-      // عند نجاح الدخول - مثال: الانتقال إلى الصفحة الرئيسية
+      // 📌 2) Save user data in Firestore
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userCredential.user!.uid)
+          .set({
+        "username": usernameController.text.trim(),
+        "email": emailController.text.trim(),
+        "createdAt": Timestamp.now(),
+      });
+
+      // 📌 3) Navigate to home
       Navigator.pushReplacementNamed(context, '/home');
-    } catch (e) {
+    } on FirebaseAuthException catch (e) {
+      String message = "Bir hata oluştu";
+
+      if (e.code == 'email-already-in-use') {
+        message = "Bu e-posta zaten kayıtlı";
+      } else if (e.code == 'invalid-email') {
+        message = "Geçersiz e-posta formatı";
+      } else if (e.code == 'weak-password') {
+        message = "Parola çok zayıf (en az 6 karakter)";
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Giriş başarısız: $e')), // فشل الدخول
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -62,44 +98,39 @@ class _LoginScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Logo
-              Center(
-                child: Hero(
-                  tag: "logo",
-                  child: Image.asset(
-                    "assets/splash.png",
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
+
+              Hero(
+                tag: "logo",
+                child: Image.asset(
+                  "assets/splash.png",
+                  height: 150,
                 ),
               ),
-              const SizedBox(height: 48),
 
-              Center(
-                child: Text(
-                  "Kayıt Ol",
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w400,
-                  ),
+              const SizedBox(height: 40),
+
+              Text(
+                "Kayıt Ol",
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 36),
 
-              // Email Field
+              const SizedBox(height: 30),
+
               TextField(
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
+                controller: usernameController,
                 decoration: InputDecoration(
-                  labelText: "E-posta", // Turkish: Email
+                  labelText: "Kullanıcı Adı",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -107,88 +138,77 @@ class _LoginScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Password Field
               TextField(
-                controller: passwordController,
-                obscureText: _obscure,
+                controller: emailController,
                 decoration: InputDecoration(
-                  labelText: "Parola", // Turkish: Password
+                  labelText: "E-posta",
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
                 ),
               ),
-              const SizedBox(height: 8),
-              
-              // Password Field
-              TextField(
-                controller: passwordController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  labelText: "Parola Tekrala", // Turkish: Password
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscure ? Icons.visibility_off : Icons.visibility,
-                    ),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
 
-              // Login Button
+              TextField(
+                controller: passwordController,
+                obscureText: _obscure,
+                decoration: InputDecoration(
+                  labelText: "Parola",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: confirmPasswordController,
+                obscureText: _obscure,
+                decoration: InputDecoration(
+                  labelText: "Parola Tekrarla",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _loading ? null : _login,
+                  onPressed: _loading ? null : _register,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   child: _loading
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text(
-                          "Kayıt Ol", // Turkish: Login
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Kayıt Ol", style: TextStyle(color: Colors.white)),
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // Create account
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Hesabınız var mı?",
-                  ), // Turkish: Don't have an account?
+                  const Text("Hesabınız var mı?"),
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
-                    child: const Text(
-                      "Giriş Yap",
-                    ), // Turkish: Create new account
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    child: const Text("Giriş Yap"),
                   ),
                 ],
               ),

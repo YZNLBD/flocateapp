@@ -4,6 +4,7 @@ import 'package:flocateapp/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'screens/home_screen.dart';
 
 
 void main() async {
@@ -22,18 +23,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Locate',
+      title: 'LocateApp',
       theme: ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
       ),
       initialRoute: '/login',
       routes: {
-        '/': (context) => const SplashScreen(),
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const SplashScreen(), // استبدل بـ HomeScreen لاحقًا
+        '/home_screen': (context) => const HomeScreen(), // استبدل بـ HomeScreen لاحقًا
       },
-    );
+    ); 
   }
 }
 
