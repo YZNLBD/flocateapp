@@ -15,10 +15,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = const [
-    Center(child: Text('Map')),
+    Center(child: Text('Maps')),
     Center(child: Text('Devices')),
     Center(child: Text('Notifications')),
-    Center(child: Text('Profile')),
+    ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -36,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: const Color.fromARGB(255, 76, 74, 74),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Harita'),
           BottomNavigationBarItem(icon: Icon(Icons.devices), label: 'Cihazlar'),
