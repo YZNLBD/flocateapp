@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flocateapp/widgets/custom_button.dart';
+import 'package:flocateapp/widgets/modern_widgets.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -97,124 +99,180 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        color: Colors.transparent,
+        child: ModernGradientBackground(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
             children: [
 
-              Hero(
-                tag: "logo",
-                child: Image.asset(
-                  "assets/splash.png",
-                  height: 150,
-                ),
+              
+              // Header Section with Icon
+              Column(
+                children: [
+                  Container(
+                    width: 200,
+                    height: 200,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Image.asset(
+                        "assets/logo0.png",
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Create Account",
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                    ),
+                  ),
+                  Text(
+                    "Join us today",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
               ),
-
-              const SizedBox(height: 40),
-
-              Text(
-                "Kayıt Ol",
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
+              
               const SizedBox(height: 30),
 
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(
-                  labelText: "Kullanıcı Adı",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+              // Form Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ModernGlassCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // Username Input
+                      ModernInputField(
+                        controller: usernameController,
+                        labelText: "Username",
+                        prefixIcon: Icons.person,
+                        accentColor: Colors.purple.shade400,
+                      ),
+                      const SizedBox(height: 14),
 
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "E-posta",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
+                      // Email Input
+                      ModernInputField(
+                        controller: emailController,
+                        labelText: "Email Address",
+                        prefixIcon: Icons.email,
+                        keyboardType: TextInputType.emailAddress,
+                        accentColor: Colors.purple.shade400,
+                      ),
+                      const SizedBox(height: 14),
 
-              TextField(
-                controller: passwordController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  labelText: "Parola",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscure = !_obscure),
-                  ),
-                ),
-              ),
+                      // Password Input
+                      ModernInputField(
+                        controller: passwordController,
+                        labelText: "Password",
+                        prefixIcon: Icons.lock,
+                        obscureText: _obscure,
+                        accentColor: Colors.purple.shade400,
+                      ),
+                      const SizedBox(height: 14),
 
-              const SizedBox(height: 16),
+                      // Confirm Password Input
+                      ModernInputField(
+                        controller: confirmPasswordController,
+                        labelText: "Confirm Password",
+                        prefixIcon: Icons.lock_outline,
+                        obscureText: _obscure,
+                        accentColor: Colors.purple.shade400,
+                      ),
+                      const SizedBox(height: 10),
 
-              TextField(
-                controller: confirmPasswordController,
-                obscureText: _obscure,
-                decoration: InputDecoration(
-                  labelText: "Parola Tekrarla",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () => setState(() => _obscure = !_obscure),
+                      // Show/Hide Password Toggle
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _obscure = !_obscure),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _obscure ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.purple.shade400,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                _obscure ? "Show" : "Hide",
+                                style: TextStyle(
+                                  color: Colors.purple.shade400,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
 
               const SizedBox(height: 20),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _loading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Register Button
+                    ModernGradientButton(
+                      label: "Create Account",
+                      icon: Icons.check_circle,
+                      gradientColors: [
+                        Colors.purple.shade400,
+                        Colors.blue.shade400,
+                      ],
+                      isLoading: _loading,
+                      fullWidth: true,
+                      onPressed: _register,
                     ),
-                  ),
-                  child: _loading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Kayıt Ol", style: TextStyle(color: Colors.white)),
+                    const SizedBox(height: 14),
+
+                    // Login Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, '/login'),
+                          child: Text(
+                            "Sign In",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple.shade400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 24),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Hesabınız var mı?"),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/login'),
-                    child: const Text("Giriş Yap"),
-                  ),
-                ],
-              ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
+      ),
       ),
     );
   }

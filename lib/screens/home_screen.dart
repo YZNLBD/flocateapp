@@ -15,7 +15,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = const [
-    Center(child: Text('Maps')),
+    MapScreen(),
     Center(child: Text('Devices')),
     Center(child: Text('Notifications')),
     ProfileScreen(),
@@ -35,13 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: Colors.red.shade400,
         unselectedItemColor: const Color.fromARGB(255, 76, 74, 74),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Harita'),
-          BottomNavigationBarItem(icon: Icon(Icons.devices), label: 'Cihazlar'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Bildirimler'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
+          BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Harita'),
+          BottomNavigationBarItem(icon: Icon(Icons.devices_other_rounded), label: 'Cihazlar'),
+          BottomNavigationBarItem(icon: Icon(Icons.notifications_active_outlined), label: 'Bildirimler'),
+          BottomNavigationBarItem(icon: Icon(Icons.person_2_outlined), label: 'Profil'),
         ],
       ),
     );
