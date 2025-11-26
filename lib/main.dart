@@ -6,13 +6,35 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
+import 'package:provider/provider.dart'; // مكتبة البروفايدر
+import 'package:flocateapp/screens/profile_provider.dart';
+
+// استيراد ملفات البروفايدر الخاصة بك
+import 'screens/device_provider.dart'; 
+import 'screens/notification_provider.dart'; // <-- تأكد من إنشاء هذا الملف واستيراده
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+
+  runApp(
+    // التغيير هنا: نستخدم MultiProvider بدلاً من ChangeNotifierProvider
+    MultiProvider(
+      providers: [
+        // 1. بروفايدر الأجهزة
+        ChangeNotifierProvider(create: (_) => DeviceProvider()),
+        
+        // 2. بروفايدر الإشعارات (هذا الذي كان ينقصك)
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
+
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -25,8 +47,8 @@ class MyApp extends StatelessWidget {
       title: 'LocateApp',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        useMaterial3: true,
       ),
-      // الصفحة الأساسية الآن تعتمد على حالة تسجيل الدخول
       home: const AuthWrapper(),
       routes: {
         '/splash': (context) => const SplashScreen(),
@@ -38,20 +60,23 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// هذا الويجيت يتحقق من حالة تسجيل الدخول
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
-      // إذا المستخدم مسجل الدخول -> انتقل للصفحة الرئيسية
-      return const HomeScreen();
-    } else {
-      // إذا لم يكن مسجل الدخول -> انتقل لشاشة تسجيل الدخول
-      return const LoginScreen();
-    }
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData) {
+          return const HomeScreen();
+        } else {
+          return const LoginScreen();
+        }
+      },
+    );
   }
 }

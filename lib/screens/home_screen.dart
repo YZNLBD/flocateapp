@@ -16,8 +16,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = const [
     MapScreen(),
-    Center(child: Text('Devices')),
-    Center(child: Text('Notifications')),
+    DevicesScreen(),
+    NotificationsScreen(),
     ProfileScreen(),
   ];
 

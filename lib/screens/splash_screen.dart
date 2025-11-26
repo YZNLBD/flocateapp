@@ -3,7 +3,7 @@ import 'package:flocateapp/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Center(
         child: Hero(
           tag: "logo",
-          child: Image.asset('assets/splash.png'),
+          child: Image.asset('assets/logo.jpg'),
         ),
       ),
     );

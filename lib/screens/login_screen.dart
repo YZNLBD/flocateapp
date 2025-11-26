@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flocateapp/screens/register_screen.dart';
 import 'package:flocateapp/screens/forgot_password_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flocateapp/widgets/modern_widgets.dart';
 
 
@@ -93,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Header Section with Icon
                 Column(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 200,
                       height: 200,
                       

@@ -1,11 +1,11 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flocateapp/screens/login_screen.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'dart:io';
-import 'package:flocateapp/widgets/modern_widgets.dart';
+import 'profile_provider.dart'; // تأكد من المسار
+import 'login_screen.dart';     // تأكد من المسار
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -16,289 +16,290 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final uid = FirebaseAuth.instance.currentUser!.uid;
-  TextEditingController usernameController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  bool _notificationsEnabled = true;
 
-  bool editing = false;
-  bool loading = false;
-  bool notificationsEnabled = true;
-  File? _selectedImage;
-  bool logoutLoading = false;
-
-
-  Future<DocumentSnapshot> getUserData() async {
+  // جلب بيانات المستخدم
+  Future<DocumentSnapshot> _getUserData() async {
     return FirebaseFirestore.instance.collection('users').doc(uid).get();
   }
 
-  Future<void> _pickImage() async {
+  // اختيار صورة وحفظها في البروفايدر
+  Future<void> _pickImage(BuildContext context) async {
     try {
       final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-        });
-        // Here you can upload image to Firebase Storage
+        // حفظ الصورة عبر البروفايدر
+        Provider.of<ProfileProvider>(context, listen: false).setProfileImage(File(image.path));
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile picture updated successfully")),
+          const SnackBar(content: Text("Profil fotoğrafı güncellendi")),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error picking image: $e")),
-      );
+      debugPrint("Error: $e");
     }
   }
 
-  Future<void> _logout() async {
-  setState(() => logoutLoading = true);
-  try {
-    await FirebaseAuth.instance.signOut();
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Logout failed: $e")),
+  // نافذة تعديل الاسم
+  void _showEditNameDialog(String currentName) {
+    final TextEditingController nameController = TextEditingController(text: currentName);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Kullanıcı Adını Değiştir"),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: "Yeni Ad",
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.person),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("İptal", style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.isNotEmpty) {
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(uid)
+                    .update({'username': nameController.text.trim()});
+                
+                setState(() {}); // تحديث الواجهة
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("İsim başarıyla güncellendi")),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            child: const Text("Kaydet", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
-  } finally {
-    setState(() => logoutLoading = false);
   }
-}
 
-
+  // تغيير كلمة المرور
   void _changePassword() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user?.email == null) return;
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Hata oluştu")));
+    }
+  }
 
-    await FirebaseAuth.instance.sendPasswordResetEmail(email: user!.email!);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-            "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi"),
-      ),
-    );
+  // تسجيل الخروج
+  void _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      debugPrint("Logout Error: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ModernGradientBackground(
-        child: FutureBuilder<DocumentSnapshot>(
-          future: getUserData(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      backgroundColor: const Color(0xFFF5F5F5), // خلفية رمادية فاتحة جداً
+      appBar: AppBar(
+        title: const Text("Profil", style: TextStyle(fontWeight: FontWeight.bold , color: Color.fromARGB(255, 76, 74, 74))),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true, // لكي يظهر الهيدر خلف الآب بار
+      body: FutureBuilder<DocumentSnapshot>(
+        future: _getUserData(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            var data = snapshot.data!;
-            String username = data['username'] ?? "User";
-            String email = data['email'] ?? "";
+          var data = snapshot.data!;
+          String username = data['username'] ?? "Kullanıcı";
+          String email = data['email'] ?? "email@example.com";
 
-            if (!editing && usernameController.text != username) {
-              usernameController.text = username;
-            }
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                // 1. الجزء العلوي (Header)
+                _buildHeader(context, username, email),
 
-            return CustomScrollView(
-              slivers: [
-                // Header with profile picture
-                SliverAppBar(
-                  expandedHeight: 320,
-                  pinned: false,
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.blue.shade400,
-                            Colors.purple.shade400,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                const SizedBox(height: 20),
+
+                // 2. قائمة الإعدادات
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.only(left: 10, bottom: 10),
+                        child: Text("Hesap Ayarları", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+                      ),
+                      
+                      _buildSettingsCard([
+                        _buildListTile(
+                          icon: Icons.edit,
+                          color: Colors.blue,
+                          title: "Profili Düzenle",
+                          subtitle: "Kullanıcı adını değiştir",
+                          onTap: () => _showEditNameDialog(username),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 40),
-                          Text(
-                            "Profile",
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              "Manage your profile",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 25),
-                          ModernProfilePicture(
-                            imageFile: _selectedImage,
-                            size: 140,
-                            onEditPressed: _pickImage,
-                            initials: username.isNotEmpty
-                                ? username[0].toUpperCase()
-                                : "U",
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            username,
-                            style: const TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            email,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                // Main content
-                SliverPadding(
-                  padding: const EdgeInsets.all(20),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      // Username Edit Section
-                      if (editing)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: ModernGlassCard(
-                            child: ModernInputField(
-                              controller: usernameController,
-                              labelText: "Edit Username",
-                              prefixIcon: Icons.edit,
-                              accentColor: Colors.purple.shade400,
-                            ),
-                          ),
+                        const Divider(height: 1, indent: 60),
+                        _buildListTile(
+                          icon: Icons.lock_outline,
+                          color: Colors.orange,
+                          title: "Şifre Değiştir",
+                          subtitle: "E-posta ile sıfırla",
+                          onTap: _changePassword,
                         ),
-
-                      // Settings Card
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: ModernGlassCard(
-                          child: Column(
-                            children: [
-                              SwitchListTile(
-                                value: notificationsEnabled,
-                                activeColor: Colors.purple.shade400,
-                                onChanged: (val) {
-                                  setState(() => notificationsEnabled = val);
-                                },
-                                title: const Text(
-                                  "Notifications",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                subtitle: const Text("Stay updated with notifications"),
-                                secondary: Icon(
-                                  Icons.notifications_active,
-                                  color: Colors.purple.shade400,
-                                  size: 28,
-                                ),
-                              ),
-                              Container(
-                                height: 1,
-                                color: Colors.grey.shade200,
-                              ),
-                              ModernSettingsTile(
-                                icon: Icons.lock,
-                                title: "Change Password",
-                                subtitle: "Reset with email",
-                                iconColor: Colors.purple.shade400,
-                                trailingIcon: Icons.arrow_forward_ios,
-                                onTap: _changePassword,
-                              ),
-                            ],
+                        const Divider(height: 1, indent: 60),
+                        SwitchListTile(
+                          activeColor: Colors.blue,
+                          secondary: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(8)),
+                            child: Icon(Icons.notifications_active, color: Colors.purple.shade400),
                           ),
+                          title: const Text("Bildirimler", style: TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: const Text("Anlık uyarıları al"),
+                          value: _notificationsEnabled,
+                          onChanged: (val) => setState(() => _notificationsEnabled = val),
                         ),
-                      ),
+                      ]),
 
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ModernGradientButton(
-                              label: editing ? "Save Username" : "Edit Username",
-                              icon: editing ? Icons.check : Icons.edit,
-                              gradientColors: [
-                                Colors.purple.shade400,
-                                Colors.blue.shade400,
-                              ],
-                              isLoading: loading,
-                              onPressed: () async {
-                                if (editing) {
-                                  setState(() => loading = true);
+                      const SizedBox(height: 30),
 
-                                  await FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc(uid)
-                                      .update({
-                                    "username":
-                                        usernameController.text.trim(),
-                                  });
-
-                                  setState(() {
-                                    editing = false;
-                                    loading = false;
-                                  });
-                                } else {
-                                  setState(() => editing = true);
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-                      // Logout Button
+                      // زر تسجيل الخروج
                       SizedBox(
                         width: double.infinity,
-                        child: ModernGradientButton(
-                          label: "Logout",
-                          icon: Icons.logout,
-                          gradientColors: [
-                            Colors.red.shade400,
-                            Colors.orange.shade400,
-                          ],
-                          isLoading: logoutLoading,   // التعديل المهم
-                          fullWidth: true,
+                        height: 55,
+                        child: ElevatedButton.icon(
                           onPressed: _logout,
+                          icon: const Icon(Icons.logout, color: Colors.white),
+                          label: const Text("Çıkış Yap", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade400,
+                            elevation: 5,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 30),
-                    ]),
+                    ],
                   ),
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
+    );
+  }
+
+  // تصميم الهيدر (مشابه لبوكس الأجهزة)
+  Widget _buildHeader(BuildContext context, String name, String email) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 100, bottom: 30),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade800, Colors.blue.shade500],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
+        ),
+        boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 10))],
+      ),
+      child: Column(
+        children: [
+          // صورة البروفايل مع زر التعديل
+          Stack(
+            children: [
+              Consumer<ProfileProvider>(
+                builder: (context, provider, child) {
+                  return Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                    child: CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.grey.shade200,
+                      backgroundImage: provider.profileImage != null
+                          ? FileImage(provider.profileImage!)
+                          : null,
+                      child: provider.profileImage == null
+                          ? Text(name.isNotEmpty ? name[0].toUpperCase() : "U", style: const TextStyle(fontSize: 40, color: Colors.blue))
+                          : null,
+                    ),
+                  );
+                },
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => _pickImage(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.orange.shade400, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 15),
+          Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+          Text(email, style: const TextStyle(fontSize: 14, color: Colors.white70)),
+        ],
+      ),
+    );
+  }
+
+  // كارد الإعدادات الأبيض
+  Widget _buildSettingsCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
+      ),
+      child: Column(children: children),
+    );
+  }
+
+  // عنصر القائمة (ListTile)
+  Widget _buildListTile({required IconData icon, required Color color, required String title, required String subtitle, required VoidCallback onTap}) {
+    return ListTile(
+      onTap: onTap,
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+        child: Icon(icon, color: color),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
     );
   }
 }

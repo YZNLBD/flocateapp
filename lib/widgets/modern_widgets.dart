@@ -16,7 +16,7 @@ class ModernGradientButton extends StatefulWidget {
   final bool fullWidth;
 
   const ModernGradientButton({
-    Key? key,
+    super.key,
     required this.label,
     required this.onPressed,
     this.icon,
@@ -27,7 +27,7 @@ class ModernGradientButton extends StatefulWidget {
     this.horizontalPadding = 24,
     this.labelStyle,
     this.fullWidth = true,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernGradientButton> createState() => _ModernGradientButtonState();
@@ -156,14 +156,14 @@ class ModernGlassCard extends StatelessWidget {
   final BoxShadow? customShadow;
 
   const ModernGlassCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding = const EdgeInsets.all(20),
     this.borderRadius = 20,
     this.opacity = 0.95,
     this.hasBorder = true,
     this.customShadow,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +209,7 @@ class ModernProfilePicture extends StatelessWidget {
   final Color? iconColor;
 
   const ModernProfilePicture({
-    Key? key,
+    super.key,
     this.imageUrl,
     this.imageFile,
     this.size = 140,
@@ -217,7 +217,7 @@ class ModernProfilePicture extends StatelessWidget {
     this.initials,
     this.backgroundColor,
     this.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -324,12 +324,12 @@ class ModernGradientBackground extends StatelessWidget {
   final Alignment? end;
 
   const ModernGradientBackground({
-    Key? key,
+    super.key,
     required this.child,
     this.colors,
     this.begin,
     this.end,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +365,7 @@ class ModernSettingsTile extends StatelessWidget {
   final Widget? trailing;
 
   const ModernSettingsTile({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     this.subtitle,
@@ -373,7 +373,7 @@ class ModernSettingsTile extends StatelessWidget {
     this.trailingIcon,
     this.iconColor,
     this.trailing,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -415,13 +415,13 @@ class ModernHeader extends StatelessWidget {
   final Widget? child;
 
   const ModernHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.subtitle,
     this.gradientColors,
     this.height = 200,
     this.child,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +489,7 @@ class ModernInputField extends StatefulWidget {
   final Color? accentColor;
 
   const ModernInputField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.labelText,
     this.prefixIcon,
@@ -499,7 +499,7 @@ class ModernInputField extends StatefulWidget {
     this.maxLines = 1,
     this.minLines,
     this.accentColor,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernInputField> createState() => _ModernInputFieldState();
@@ -585,13 +585,13 @@ class ModernExpandableCard extends StatefulWidget {
   final bool initiallyExpanded;
 
   const ModernExpandableCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.content,
     required this.icon,
     this.iconColor,
     this.initiallyExpanded = true,
-  }) : super(key: key);
+  });
 
   @override
   State<ModernExpandableCard> createState() => _ModernExpandableCardState();
@@ -694,12 +694,12 @@ class ModernStatCard extends StatelessWidget {
   final List<Color> gradientColors;
 
   const ModernStatCard({
-    Key? key,
+    super.key,
     required this.value,
     required this.label,
     required this.icon,
     this.gradientColors = const [Colors.purple, Colors.blue],
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

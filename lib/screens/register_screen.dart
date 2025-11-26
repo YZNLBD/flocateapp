@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flocateapp/widgets/custom_button.dart';
 import 'package:flocateapp/widgets/modern_widgets.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -113,7 +112,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               // Header Section with Icon
               Column(
                 children: [
-                  Container(
+                  SizedBox(
                     width: 200,
                     height: 200,
                     child: Padding(
