@@ -3,8 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
-import 'profile_provider.dart'; // تأكد من المسار
+import 'dart:io'; // تأكد من المسار
 import 'login_screen.dart';     // تأكد من المسار
 
 class ProfileScreen extends StatefulWidget {
@@ -22,23 +21,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // جلب بيانات المستخدم
   Future<DocumentSnapshot> _getUserData() async {
     return FirebaseFirestore.instance.collection('users').doc(uid).get();
-  }
-
-  // اختيار صورة وحفظها في البروفايدر
-  Future<void> _pickImage(BuildContext context) async {
-    try {
-      final XFile? image = await _imagePicker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        // حفظ الصورة عبر البروفايدر
-        Provider.of<ProfileProvider>(context, listen: false).setProfileImage(File(image.path));
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profil fotoğrafı güncellendi")),
-        );
-      }
-    } catch (e) {
-      debugPrint("Error: $e");
-    }
   }
 
   // نافذة تعديل الاسم
@@ -118,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // خلفية رمادية فاتحة جداً
       appBar: AppBar(
-        title: const Text("Profil", style: TextStyle(fontWeight: FontWeight.bold , color: Color.fromARGB(255, 76, 74, 74))),
+        title: const Text("Profil", style: TextStyle(fontWeight: FontWeight.bold , color: Color.fromARGB(255, 255, 255, 255))),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -172,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         const Divider(height: 1, indent: 60),
                         SwitchListTile(
-                          activeColor: Colors.blue,
+                          activeThumbColor: Colors.blue,
                           secondary: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(8)),
@@ -233,41 +215,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Column(
         children: [
-          // صورة البروفايل مع زر التعديل
-          Stack(
-            children: [
-              Consumer<ProfileProvider>(
-                builder: (context, provider, child) {
-                  return Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage: provider.profileImage != null
-                          ? FileImage(provider.profileImage!)
-                          : null,
-                      child: provider.profileImage == null
-                          ? Text(name.isNotEmpty ? name[0].toUpperCase() : "U", style: const TextStyle(fontSize: 40, color: Colors.blue))
-                          : null,
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () => _pickImage(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: Colors.orange.shade400, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                    child: const Icon(Icons.camera_alt, color: Colors.white, size: 20),
-                  ),
-                ),
-              ),
-            ],
-          ),
           const SizedBox(height: 15),
           Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
           Text(email, style: const TextStyle(fontSize: 14, color: Colors.white70)),

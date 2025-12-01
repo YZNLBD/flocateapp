@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'device_model.dart';
-import 'package:latlong2/latlong.dart'; // لإضافة موقع افتراضي عند الإنشاء
+import 'package:latlong2/latlong.dart';
 
 class DeviceProvider with ChangeNotifier {
   List<DeviceModel> _devices = [];
@@ -10,6 +10,7 @@ class DeviceProvider with ChangeNotifier {
 
   // إحصائيات للبوكس العلوي
   int get totalDevices => _devices.length;
+  // الانتباه: الموديل يستخدم isConnected
   int get connectedCount => _devices.where((d) => d.isConnected).length;
   int get disconnectedCount => _devices.where((d) => !d.isConnected).length;
 

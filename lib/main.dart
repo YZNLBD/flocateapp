@@ -7,7 +7,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart'; // مكتبة البروفايدر
-import 'package:flocateapp/screens/profile_provider.dart';
 
 // استيراد ملفات البروفايدر الخاصة بك
 import 'screens/device_provider.dart'; 
@@ -29,8 +28,6 @@ void main() async {
         
         // 2. بروفايدر الإشعارات (هذا الذي كان ينقصك)
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
-
-        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: const MyApp(),
     ),

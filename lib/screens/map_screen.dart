@@ -1,11 +1,15 @@
-import 'package:flocateapp/screens/devices_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart'; // مكتبة الربط
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flocateapp/screens/device_model.dart';
+
+// تأكد من صحة مسارات ملفاتك هنا
+import 'package:flocateapp/screens/device_model.dart'; // تأكد من أن المسار models وليس screens إذا قمت بنقله
 import 'package:flocateapp/screens/device_detail.dart';
+import 'package:flocateapp/screens/devices_screen.dart';
+import 'package:flocateapp/screens/device_provider.dart'; // أو المسار الصحيح للبروفايدر
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -18,17 +22,6 @@ class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
   LatLng? userLocation;
   bool _isLoading = true;
-
-  final List<DeviceModel> _devices = [
-    DeviceModel(
-      id: '1',
-      name: 'çanta',
-      batteryLevel: 85,
-      isConnected: true,
-      lastSeen: DateTime.now(),
-      position: LatLng(36.789557, 34.521176),
-    ),
-  ];
 
   @override
   void initState() {
@@ -80,8 +73,8 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Future<void> _openGoogleMaps(double lat, double lng) async {
-    final Uri googleMapsUrl = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    final Uri googleMapsUrl =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
 
     if (await canLaunchUrl(googleMapsUrl)) {
       await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
@@ -104,7 +97,7 @@ class _MapScreenState extends State<MapScreen> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.gps_fixed, color: Colors.blue, size: 30),
+                  Icon(device.icon, color: Colors.blue, size: 30),
                   const SizedBox(width: 10),
                   Text(device.name,
                       style: const TextStyle(
@@ -120,7 +113,7 @@ class _MapScreenState extends State<MapScreen> {
                 ],
               ),
               const SizedBox(height: 10),
-              Text("Durum: ${device.isConnected ? 'Bağlı' : 'Bağlantı Yok'}",
+              Text("Durum: ${device.isActive ? 'Aktif' : 'Pasif'}",
                   style: const TextStyle(color: Colors.grey)),
               const Spacer(),
               SizedBox(
@@ -128,8 +121,8 @@ class _MapScreenState extends State<MapScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.pop(context);
-                    _openGoogleMaps(device.position.latitude,
-                        device.position.longitude);
+                    _openGoogleMaps(
+                        device.position.latitude, device.position.longitude);
                   },
                   icon: const Icon(Icons.map, color: Colors.white),
                   label: const Text("Google Maps'te Aç",
@@ -153,18 +146,10 @@ class _MapScreenState extends State<MapScreen> {
                       MaterialPageRoute(
                         builder: (context) => DeviceDetailScreen(
                           device: device,
-                          onDelete: (id) {
-                            setState(() {
-                              _devices.removeWhere((d) => d.id == id);
-                            });
-                          },
-                          onRename: (id, newName) {
-                            setState(() {
-                              final index =
-                                  _devices.indexWhere((d) => d.id == id);
-                              if (index != -1) {}
-                            });
-                          },
+                          // ربط الحذف بالبروفايدر
+                          onDelete: (id) => Provider.of<DeviceProvider>(context, listen: false).deleteDevice(id),
+                          // ربط التعديل بالبروفايدر
+                          onRename: (id, newName) => Provider.of<DeviceProvider>(context, listen: false).renameDevice(id, newName),
                         ),
                       ),
                     );
@@ -188,7 +173,12 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<Marker> deviceMarkers = _devices.map((device) {
+    // 1. جلب البيانات من البروفايدر (البيانات الحقيقية)
+    final deviceProvider = Provider.of<DeviceProvider>(context);
+    final devices = deviceProvider.devices;
+
+    // 2. تحويل البيانات لعلامات
+    List<Marker> deviceMarkers = devices.map((device) {
       return Marker(
         point: device.position,
         width: 80,
@@ -198,8 +188,8 @@ class _MapScreenState extends State<MapScreen> {
           child: Column(
             children: [
               Icon(
-                Icons.location_on,
-                color: device.isConnected
+                device.icon, // استخدام أيقونة الموديل
+                color: device.isActive
                     ? const Color.fromARGB(255, 229, 30, 30)
                     : const Color.fromARGB(255, 198, 89, 31),
                 size: 45,
@@ -235,8 +225,7 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: PreferredSize(
-        preferredSize:
-            const Size.fromHeight(kToolbarHeight + 20),
+        preferredSize: const Size.fromHeight(kToolbarHeight + 20),
         child: SafeArea(
           child: Padding(
             padding:
@@ -282,6 +271,24 @@ class _MapScreenState extends State<MapScreen> {
                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.flocateapp',
               ),
+              
+              // 3. طبقة المناطق الآمنة (الدوائر) - تضاف قبل العلامات
+              CircleLayer(
+                circles: devices
+                    .where((d) => d.isSafeZoneEnabled && d.safeZoneCenter != null)
+                    .map((d) {
+                  return CircleMarker(
+                    point: d.safeZoneCenter!,
+                    radius: d.safeZoneRadius,
+                    useRadiusInMeter: true, // استخدام المتر الحقيقي
+                    color: Colors.green.withOpacity(0.2), // شفافية خفيفة
+                    borderColor: Colors.green, // حدود خضراء
+                    borderStrokeWidth: 2,
+                  );
+                }).toList(),
+              ),
+
+              // 4. طبقة العلامات
               MarkerLayer(markers: [
                 if (userLocation != null)
                   Marker(

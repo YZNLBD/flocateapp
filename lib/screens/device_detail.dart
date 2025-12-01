@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flocateapp/screens/device_model.dart';
+// 👇 1. إضافة هذا الاستيراد هو الحل للمشكلة
+import 'package:flocateapp/screens/safe_zone_screen.dart'; 
 
 class DeviceDetailScreen extends StatefulWidget {
   final DeviceModel device;
-  // دوال الاستدعاء الخلفي (Callbacks) للتواصل مع الصفحة الرئيسية
   final Function(String id) onDelete;
   final Function(String id, String newName) onRename;
 
@@ -20,17 +21,16 @@ class DeviceDetailScreen extends StatefulWidget {
 }
 
 class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
-  late String _currentName; // لتحديث الاسم فوراً على الشاشة
+  late String _currentName;
   bool _notificationEnabled = true;
   bool _lostMode = false;
 
   @override
   void initState() {
     super.initState();
-    _currentName = widget.device.name; // تهيئة الاسم الحالي
+    _currentName = widget.device.name;
   }
 
-  // دالة الحذف
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -45,31 +45,29 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
           ),
           TextButton(
             onPressed: () {
-              // 1. تنفيذ الحذف الفعلي في الصفحة الأم
               widget.onDelete(widget.device.id);
-
-              Navigator.of(ctx).pop(); // إغلاق الـ Dialog
-              Navigator.of(context).pop(); // العودة للصفحة الرئيسية
-
+              Navigator.of(ctx).pop();
+              Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Cihaz başarıyla silindi.")),
               );
             },
-            child: const Text("Sil", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text("Sil",
+                style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  // دالة تعديل الاسم
   void _showEditNameDialog(BuildContext context) {
-    final TextEditingController nameController = TextEditingController(text: _currentName);
+    final TextEditingController nameController =
+        TextEditingController(text: _currentName);
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Cihaz Adını Düzenle"), // تعديل اسم الجهاز
+        title: const Text("Cihaz Adını Düzenle"),
         content: TextField(
           controller: nameController,
           decoration: const InputDecoration(
@@ -85,22 +83,18 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                // 1. تحديث الاسم محلياً
                 setState(() {
                   _currentName = nameController.text;
                 });
-                // 2. إرسال الاسم الجديد للصفحة الأم
                 widget.onRename(widget.device.id, nameController.text);
-                
                 Navigator.of(ctx).pop();
-                
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("İsim güncellendi.")), // تم تحديث الاسم
+                  const SnackBar(content: Text("İsim güncellendi.")),
                 );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text("Kaydet", style: TextStyle(color: Colors.white)), // حفظ
+            child: const Text("Kaydet", style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -111,7 +105,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_currentName), // نستخدم المتغير المحلي ليتحدث فوراً
+        title: Text(_currentName),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
@@ -119,7 +113,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
               if (value == 'delete') {
                 _confirmDelete(context);
               } else if (value == 'edit') {
-                _showEditNameDialog(context); // استدعاء نافذة التعديل
+                _showEditNameDialog(context);
               }
             },
             itemBuilder: (BuildContext context) {
@@ -187,9 +181,12 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                           decoration: const BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
-                            boxShadow: [BoxShadow(blurRadius: 10, color: Colors.black26)],
+                            boxShadow: [
+                              BoxShadow(blurRadius: 10, color: Colors.black26)
+                            ],
                           ),
-                          child: const Icon(Icons.location_history, color: Colors.red, size: 30),
+                          child: const Icon(Icons.location_history,
+                              color: Colors.red, size: 30),
                         ),
                       ),
                     ],
@@ -209,7 +206,10 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.grey.shade200, blurRadius: 5)],
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.grey.shade200, blurRadius: 5)
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -220,7 +220,8 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: widget.device.batteryColor)),
-                            const Text("Tahmini: 4 Gün", style: TextStyle(color: Colors.grey)),
+                            const Text("Tahmini: 4 Gün",
+                                style: TextStyle(color: Colors.grey)),
                           ],
                         ),
                         const SizedBox(height: 10),
@@ -238,31 +239,66 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  
+                  // --- أزرار التحكم (تم تعديلها لتشمل زر المنطقة الآمنة) ---
                   Row(
                     children: [
                       Expanded(
-                          child: _buildActionButton(
-                              Icons.notifications_active, "Ses Çal", Colors.orange)),
+                          child: _buildActionButton(Icons.notifications_active,
+                              "Ses Çal", Colors.orange)),
                       const SizedBox(width: 10),
                       Expanded(
                           child: _buildActionButton(
                               Icons.directions, "Yol Tarifi", Colors.blue)),
+                      const SizedBox(width: 10),
+                      // 👇 زر المنطقة الآمنة الجديد 👇
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SafeZoneScreen(device: widget.device),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Column( // استخدمت Column لتنسيق الأيقونة والنص
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.security, color: Colors.white),
+                              Text("Güvenli", // اختصار للنص ليناسب المساحة
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
+                  // -------------------------------------------------------
+
                   const SizedBox(height: 20),
                   _buildSectionTitle("Ayarlar & Bildirimler"),
                   SwitchListTile(
                     title: const Text("Beni Unuttuğunda Bildir"),
                     subtitle: const Text("Cihazdan uzaklaştığında uyarı al."),
                     value: _notificationEnabled,
-                    activeThumbColor: Colors.blue,
-                    onChanged: (val) => setState(() => _notificationEnabled = val),
+                    activeColor: Colors.blue,
+                    onChanged: (val) =>
+                        setState(() => _notificationEnabled = val),
                   ),
                   SwitchListTile(
                     title: const Text("Kayıp Modu (Lost Mode)"),
-                    subtitle: const Text("Cihaz kilitlenir ve iletişim bilgileri gösterilir."),
+                    subtitle: const Text(
+                        "Cihaz kilitlenir ve iletişim bilgileri gösterilir."),
                     value: _lostMode,
-                    activeThumbColor: Colors.red,
+                    activeColor: Colors.red,
                     onChanged: (val) => setState(() => _lostMode = val),
                   ),
                 ],
@@ -277,19 +313,26 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
+      style: const TextStyle(
+          fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
     );
   }
 
   Widget _buildActionButton(IconData icon, String label, Color color) {
-    return ElevatedButton.icon(
+    return ElevatedButton(
       onPressed: () {},
-      icon: Icon(icon, color: Colors.white),
-      label: Text(label, style: const TextStyle(color: Colors.white)),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      child: Column( // استخدام Column بدل Row لتوفير المساحة الأفقية
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(height: 2),
+          Text(label, style: const TextStyle(color: Colors.white, fontSize: 11)),
+        ],
       ),
     );
   }
