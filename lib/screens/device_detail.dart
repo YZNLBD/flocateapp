@@ -289,7 +289,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     title: const Text("Beni Unuttuğunda Bildir"),
                     subtitle: const Text("Cihazdan uzaklaştığında uyarı al."),
                     value: _notificationEnabled,
-                    activeColor: Colors.blue,
+                    activeThumbColor: Colors.blue,
                     onChanged: (val) =>
                         setState(() => _notificationEnabled = val),
                   ),
@@ -298,7 +298,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     subtitle: const Text(
                         "Cihaz kilitlenir ve iletişim bilgileri gösterilir."),
                     value: _lostMode,
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     onChanged: (val) => setState(() => _lostMode = val),
                   ),
                 ],

@@ -125,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   Text(
-                    "Create Account",
+                    "Hesap oluştur",
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -133,7 +133,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   Text(
-                    "Join us today",
+                    "Bize katıl",
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade600,
@@ -154,7 +154,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Username Input
                       ModernInputField(
                         controller: usernameController,
-                        labelText: "Username",
+                        labelText: "Adı",
                         prefixIcon: Icons.person,
                         accentColor: Colors.purple.shade400,
                       ),
@@ -163,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Email Input
                       ModernInputField(
                         controller: emailController,
-                        labelText: "Email Address",
+                        labelText: "E-mail Adresi",
                         prefixIcon: Icons.email,
                         keyboardType: TextInputType.emailAddress,
                         accentColor: Colors.purple.shade400,
@@ -173,7 +173,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Password Input
                       ModernInputField(
                         controller: passwordController,
-                        labelText: "Password",
+                        labelText: "Parola",
                         prefixIcon: Icons.lock,
                         obscureText: _obscure,
                         accentColor: Colors.purple.shade400,
@@ -183,7 +183,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       // Confirm Password Input
                       ModernInputField(
                         controller: confirmPasswordController,
-                        labelText: "Confirm Password",
+                        labelText: "Parolayı Doğrula",
                         prefixIcon: Icons.lock_outline,
                         obscureText: _obscure,
                         accentColor: Colors.purple.shade400,
@@ -229,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     // Register Button
                     ModernGradientButton(
-                      label: "Create Account",
+                      label: "Hesap Oluştur",
                       icon: Icons.check_circle,
                       gradientColors: [
                         Colors.purple.shade400,
@@ -246,7 +246,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Already have an account? ",
+                          "Hesabın var mı?",
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade700,
@@ -255,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         GestureDetector(
                           onTap: () => Navigator.pushNamed(context, '/login'),
                           child: Text(
-                            "Sign In",
+                            "Giriş Yap",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,

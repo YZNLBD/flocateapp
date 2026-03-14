@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flocateapp/screens/device_model.dart';
-// 👇 1. إضافة هذا الاستيراد هو الحل للمشكلة
 import 'package:flocateapp/screens/safe_zone_screen.dart'; 
 
 class DeviceDetailScreen extends StatefulWidget {
@@ -289,7 +288,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     title: const Text("Beni Unuttuğunda Bildir"),
                     subtitle: const Text("Cihazdan uzaklaştığında uyarı al."),
                     value: _notificationEnabled,
-                    activeColor: Colors.blue,
+                    activeThumbColor: Colors.blue,
                     onChanged: (val) =>
                         setState(() => _notificationEnabled = val),
                   ),
@@ -298,7 +297,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> {
                     subtitle: const Text(
                         "Cihaz kilitlenir ve iletişim bilgileri gösterilir."),
                     value: _lostMode,
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     onChanged: (val) => setState(() => _lostMode = val),
                   ),
                 ],

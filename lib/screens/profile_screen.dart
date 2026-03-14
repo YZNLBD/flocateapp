@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
-import 'dart:io'; // تأكد من المسار
-import 'login_screen.dart';     // تأكد من المسار
+import 'package:flocateapp/widgets/modern_widgets.dart';
+import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,7 +13,6 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final uid = FirebaseAuth.instance.currentUser!.uid;
-  final ImagePicker _imagePicker = ImagePicker();
   bool _notificationsEnabled = true;
 
   // جلب بيانات المستخدم
@@ -28,40 +25,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final TextEditingController nameController = TextEditingController(text: currentName);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Kullanıcı Adını Değiştir"),
-        content: TextField(
-          controller: nameController,
-          decoration: const InputDecoration(
-            labelText: "Yeni Ad",
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.person),
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Kullanıcı Adını Değiştir",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple.shade400,
+                ),
+              ),
+              const SizedBox(height: 20),
+              ModernInputField(
+                controller: nameController,
+                labelText: "Yeni Ad",
+                prefixIcon: Icons.person,
+                accentColor: Colors.purple.shade400,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text("İptal"),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ModernGradientButton(
+                      label: "Kaydet",
+                      icon: Icons.check,
+                      gradientColors: [
+                        Colors.purple.shade400,
+                        Colors.blue.shade400,
+                      ],
+                      onPressed: () async {
+                        if (nameController.text.isNotEmpty) {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(uid)
+                              .update({'username': nameController.text.trim()});
+                          
+                          setState(() {});
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("İsim başarıyla güncellendi")),
+                          );
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("İptal", style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (nameController.text.isNotEmpty) {
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(uid)
-                    .update({'username': nameController.text.trim()});
-                
-                setState(() {}); // تحديث الواجهة
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("İsim başarıyla güncellendi")),
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            child: const Text("Kaydet", style: TextStyle(color: Colors.white)),
-          ),
-        ],
       ),
     );
   }
@@ -76,7 +104,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SnackBar(content: Text("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi")),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Hata oluştu")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Hata oluştu")),
+      );
     }
   }
 
@@ -98,155 +128,267 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // خلفية رمادية فاتحة جداً
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text("Profil", style: TextStyle(fontWeight: FontWeight.bold , color: Color.fromARGB(255, 255, 255, 255))),
+        title: const Text(
+          "Profil",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF2C3E50),
+          ),
+        ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      extendBodyBehindAppBar: true, // لكي يظهر الهيدر خلف الآب بار
-      body: FutureBuilder<DocumentSnapshot>(
-        future: _getUserData(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: ModernGradientBackground(
+        child: FutureBuilder<DocumentSnapshot>(
+          future: _getUserData(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          var data = snapshot.data!;
-          String username = data['username'] ?? "Kullanıcı";
-          String email = data['email'] ?? "email@example.com";
+            var data = snapshot.data!;
+            String username = data['username'] ?? "Kullanıcı";
+            String email = data['email'] ?? "email@example.com";
 
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // 1. الجزء العلوي (Header)
-                _buildHeader(context, username, email),
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 20),
-
-                // 2. قائمة الإعدادات
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  // Header Section - الصورة والاسم
+                  Column(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.only(left: 10, bottom: 10),
-                        child: Text("Hesap Ayarları", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
-                      ),
-                      
-                      _buildSettingsCard([
-                        _buildListTile(
-                          icon: Icons.edit,
-                          color: Colors.blue,
-                          title: "Profili Düzenle",
-                          subtitle: "Kullanıcı adını değiştir",
-                          onTap: () => _showEditNameDialog(username),
-                        ),
-                        const Divider(height: 1, indent: 60),
-                        _buildListTile(
-                          icon: Icons.lock_outline,
-                          color: Colors.orange,
-                          title: "Şifre Değiştir",
-                          subtitle: "E-posta ile sıfırla",
-                          onTap: _changePassword,
-                        ),
-                        const Divider(height: 1, indent: 60),
-                        SwitchListTile(
-                          activeThumbColor: Colors.blue,
-                          secondary: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(8)),
-                            child: Icon(Icons.notifications_active, color: Colors.purple.shade400),
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purple.shade400,
+                              Colors.blue.shade400,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          title: const Text("Bildirimler", style: TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: const Text("Anlık uyarıları al"),
-                          value: _notificationsEnabled,
-                          onChanged: (val) => setState(() => _notificationsEnabled = val),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purple.withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                      ]),
-
-                      const SizedBox(height: 30),
-
-                      // زر تسجيل الخروج
-                      SizedBox(
-                        width: double.infinity,
-                        height: 55,
-                        child: ElevatedButton.icon(
-                          onPressed: _logout,
-                          icon: const Icon(Icons.logout, color: Colors.white),
-                          label: const Text("Çıkış Yap", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red.shade400,
-                            elevation: 5,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                        child: Center(
+                          child: Text(
+                            username[0].toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 30),
+                      const SizedBox(height: 16),
+                      Text(
+                        username,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2C3E50),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
 
-  // تصميم الهيدر (مشابه لبوكس الأجهزة)
-  Widget _buildHeader(BuildContext context, String name, String email) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.only(top: 100, bottom: 30),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.blue.shade800, Colors.blue.shade500],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+                  const SizedBox(height: 30),
+
+                  // Settings Card
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ModernGlassCard(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Hesap Ayarları",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // تعديل الملف الشخصي
+                          _buildSettingItem(
+                            icon: Icons.edit,
+                            iconColor: Colors.blue,
+                            title: "Profili Düzenle",
+                            subtitle: "Kullanıcı adını değiştir",
+                            onTap: () => _showEditNameDialog(username),
+                          ),
+                          
+                          const Divider(height: 30),
+
+                          // تغيير كلمة المرور
+                          _buildSettingItem(
+                            icon: Icons.lock_outline,
+                            iconColor: Colors.orange,
+                            title: "Şifre Değiştir",
+                            subtitle: "E-posta ile sıfırla",
+                            onTap: _changePassword,
+                          ),
+
+                          const Divider(height: 30),
+
+                          // الإشعارات
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.notifications_active,
+                                  color: Colors.purple.shade400,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "Bildirimler",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    Text(
+                                      "Anlık uyarıları al",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: _notificationsEnabled,
+                                onChanged: (val) => setState(() => _notificationsEnabled = val),
+                                activeThumbColor: Colors.purple.shade400,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // زر تسجيل الخروج
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: ModernGradientButton(
+                      label: "Çıkış Yap",
+                      icon: Icons.logout,
+                      gradientColors: [
+                        Colors.red.shade400,
+                        Colors.red.shade600,
+                      ],
+                      fullWidth: true,
+                      onPressed: _logout,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            );
+          },
         ),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-        boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 10))],
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 15),
-          Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          Text(email, style: const TextStyle(fontSize: 14, color: Colors.white70)),
-        ],
       ),
     );
   }
 
-  // كارد الإعدادات الأبيض
-  Widget _buildSettingsCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))],
-      ),
-      child: Column(children: children),
-    );
-  }
-
-  // عنصر القائمة (ListTile)
-  Widget _buildListTile({required IconData icon, required Color color, required String title, required String subtitle, required VoidCallback onTap}) {
-    return ListTile(
+  // عنصر الإعدادات
+  Widget _buildSettingItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
       onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-        child: Icon(icon, color: color),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
     );
   }
 }

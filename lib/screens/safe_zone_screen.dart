@@ -132,7 +132,7 @@ class _SafeZoneScreenState extends State<SafeZoneScreen> {
                   title: const Text("Güvenli Bölgeyi Aktif Et", style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: const Text("Cihaz bu alanın dışına çıkarsa bildirim alırsınız."),
                   value: _isEnabled,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                   onChanged: (val) => setState(() => _isEnabled = val),
                 ),
                 const Divider(),
